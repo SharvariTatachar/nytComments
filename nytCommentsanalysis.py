@@ -21,11 +21,6 @@ del articles['multimedia']
 lst_topics = ["Politics", "Culture", "National"]
 art_df = articles.query('newDesk in @lst_topics') 
 
-#get articleID lists for each category: 
-politics = art_df.query("newDesk in @lst_topics[0]")
-culture = art_df.query("newDesk in @lst_topics[1]")
-national = art_df.query("newDesk in @lst_topics[2]")
-
 #READING IN COMMENT DETAILS ------------
 
 #using articleID, commentBody, and commentID:
@@ -54,47 +49,73 @@ def clean(comment):
 #print(comments_general["commentBody"].head()
 
 
-#CALCULATE OVERALL SENTIMENT SCORES ------------
+#DISPLAY SENTIMENT SCORES ------------
 
 def sentiment_score(x, y, z): 
+    total = x+y+z
     if (x>y) and (x>z):
         print("Positive. %d" % (x))
     elif (y>x) and (y>z): 
         print("Negative. %d" % (y))
     else: 
-        print("Neutral. %d, %d, and %d" % (x, y, z))
+        print("Neutral. %d, %d, %d" % (x, y, z))
 
-def create_sentiment_columns(df): 
-
-    df["Positive"] = [sentiments.polarity_scores(i)["pos"] for i in df["commentBody"]]
-
-    df["Negative"] = [sentiments.polarity_scores(i)["neg"] for i in df["commentBody"]]
-
-    df["Neutral"] = [sentiments.polarity_scores(i)["neu"] for i in df["commentBody"]]
-
-    comments_polarity = df[["commentBody", "Positive", "Negative", "Neutral"]]
-
-    #print(comments_polarity.head())
-
-    pos = sum(comments_polarity["Positive"])
-    neg = sum(comments_polarity["Negative"])
-    neu = sum(comments_polarity["Neutral"])
-
-    return sentiment_score(pos, neg, neu) #this is the analysis for all selected comm. 
-
-#create_sentiment_columns(comments_general)
 
 #GETTING CATEGORICAL DATA------------------- 
 
 trump_related = articles.keywords.apply(lambda x: 'Trump, Donald J' in x)
-df_trump = articles[trump_related]
+articles['trump_related'] = trump_related #column of boolean vals 
+
+trump_df = articles.query('trump_related == True')
+#print(len(trump_df))
 
 #277 related articles -- now find the related comments: 
-trump_articleIDs = df_trump['articleID'].values.tolist() 
+trump_articleIDs = trump_df['articleID'].values.tolist() 
 comments_trump = comments.query('articleID in @trump_articleIDs')
-
+"""
 #clean them -- comment out other cleaning steps when running this: 
-comments_trump["commentBody"] = comments_trump["commentBody"].apply(clean) #fix error here
+comments_trump["commentBody"] = comments_trump["commentBody"].apply(clean) 
 #print(comments_trump["commentBody"].head())
 
-create_sentiment_columns(comments_trump)
+#CALCULATE TRUMP SCORES --------- 
+comments_trump["Positive"] = [sentiments.polarity_scores(i)["pos"] for i in 
+comments_trump["commentBody"]]
+
+comments_trump["Negative"] = [sentiments.polarity_scores(i)["neg"] for i in 
+comments_trump["commentBody"]]
+
+comments_trump["Neutral"] = [sentiments.polarity_scores(i)["neu"] for i in 
+comments_trump["commentBody"]]
+
+comments_polarity = comments_trump[["commentBody", "Positive", "Negative", "Neutral"]]
+
+#print(comments_polarity.head())
+
+pos = sum(comments_polarity["Positive"])
+neg = sum(comments_polarity["Negative"])
+neu = sum(comments_polarity["Neutral"])
+
+print("trump related comments scoring: ")
+sentiment_score(pos, neg, neu) #this is the analysis for all selected comm. 
+"""
+#CALCULATE GENERAL SCORES ------ 
+comments_general["commentBody"] = comments_general["commentBody"].apply(clean) 
+comments_general["Positive"] = [sentiments.polarity_scores(i)["pos"] for i in 
+comments_general["commentBody"]]
+
+comments_general["Negative"] = [sentiments.polarity_scores(i)["neg"] for i in 
+comments_general["commentBody"]]
+
+comments_general["Neutral"] = [sentiments.polarity_scores(i)["neu"] for i in 
+comments_general["commentBody"]]
+
+comments_polarity = comments_general[["commentBody", "Positive", "Negative", "Neutral"]]
+
+#print(comments_polarity.head())
+
+pos = sum(comments_polarity["Positive"])
+neg = sum(comments_polarity["Negative"])
+neu = sum(comments_polarity["Neutral"])
+
+print(" general comments scoring: ")
+sentiment_score(pos, neg, neu) #this is the analysis for all selected comm. 
