@@ -1,7 +1,7 @@
 # nytComments
 
 This Python program analyzes New York Times comments on 
-specific article from April of 2018. The categories currently
+specific articles from April of 2018. The categories currently
 analyzed are a composite of "Culture", "Politics", and 
 "National" tagged articles and "Donald J. Trump" related articles. 
 
